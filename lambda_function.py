@@ -24,7 +24,7 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 def vehiculo_marca(event, context):
     query = ""
     
-    if event["rawQueryString"] != "":
+    if event["queryStringParameters"] != None:
         query = " WHERE id_vehiculo = " + event['queryStringParameters']['id']
         
     with conn.cursor() as cur:
@@ -46,7 +46,7 @@ def vehiculo_marca(event, context):
 def tasa_interes(event, context):
     query = ""
     
-    if event["rawQueryString"] != "":
+    if event["queryStringParameters"] != None:
         query = " WHERE id_interes = " + event['queryStringParameters']['id']
     
     with conn.cursor() as cur:
@@ -68,7 +68,7 @@ def tasa_interes(event, context):
 def linea_serie(event, context):
     query = ""
     
-    if event["rawQueryString"] != "":
+    if event["queryStringParameters"] != None:
         query = " WHERE id_vehiculo = " + event['queryStringParameters']['id_vehiculo']
     
     with conn.cursor() as cur:
@@ -90,29 +90,7 @@ def linea_serie(event, context):
 def modelo(event, context):
     query = ""
     
-    if event["rawQueryString"] != "":
-        query = " WHERE id_serie = " + event['queryStringParameters']['id_serie']
-    
-    with conn.cursor() as cur:
-        cur.execute("SELECT * FROM modelo" + query)
-        
-        headers = [x[0] for x in cur.description] 
-        rv = cur.fetchall()
-        json_data=[]
-        for result in rv:
-            json_data.append(dict(zip(headers, result)))
-        
-        return {
-            "statusCode": 200,
-            "headers": {'Content-Type': 'application/json'},
-            "isBase64Encoded": False,
-            "body": json.dumps(json_data)
-        }
-
-def modelo(event, context):
-    query = ""
-    
-    if event["rawQueryString"] != "":
+    if event["queryStringParameters"] != None:
         query = " WHERE id_serie = " + event['queryStringParameters']['id_serie']
     
     with conn.cursor() as cur:
@@ -157,14 +135,18 @@ def cotiza(event, context, type):
         }
 
 def lambda_handler(event, context):
-    if event['routeKey'] == 'GET /vehiculo-marca':
+    if event['path'] == '/vehiculo-marca':
         return vehiculo_marca(event, context)
-    elif event['routeKey'] == 'GET /tasa-interes':
+    elif event['path'] == '/tasa-interes':
         return tasa_interes(event, context)
-    elif event['routeKey'] == 'GET /linea':
+    elif event['path'] == '/linea':
         return linea_serie(event, context)
-    elif event['routeKey'] == 'GET /modelo':
+    elif event['path'] == '/modelo':
         return modelo(event, context)
+    elif event['path'] == '/cotiza' and event['httpMethod'] == 'GET':
+        return cotiza(event, context, 'GET')
+    elif event['path'] == '/cotiza' and event['httpMethod'] == 'POST':
+        return cotiza(event, context, 'POST')
         
     return {
             "statusCode": 200,
